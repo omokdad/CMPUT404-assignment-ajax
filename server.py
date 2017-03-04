@@ -22,15 +22,15 @@
 
 
 import flask
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 app = Flask(__name__)
 app.debug = True
 
 # An example world
 # {
-#    'a':{'x':1, 'y':2},
-#    'b':{'x':2, 'y':3}
+#    'a':{'x':1, 'y':2, 'colour':FF0000, 'radius':50},
+#    'b':{'x':2, 'y':3, 'colour':00FF00, 'radius':20}
 # }
 
 class World:
@@ -74,26 +74,28 @@ def flask_post_json():
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return redirect("/static/index.html")
+    return url_for('static', filename='index.html')
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
+    jsonReq = flask_post_json()
     return None
 
 @app.route("/world", methods=['POST','GET'])
 def world():
     '''you should probably return the world here'''
-    return None
+    return jsonify(myWorld.world())
 
 @app.route("/entity/<entity>")
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return jsonify(myWorld.get(entity))
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
+    myWorld.clear()
     return None
 
 if __name__ == "__main__":
