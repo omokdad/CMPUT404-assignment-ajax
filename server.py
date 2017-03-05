@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# Copyright 2013 Abram Hindle
+# Copyright 2017 Abram Hindle, Omar Almokdad
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,33 +71,38 @@ def flask_post_json():
     else:
         return json.loads(request.form.keys()[0])
 
+# open the app in the root page
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
     return app.send_static_file('index.html')
 
+# update an entity in the shared world, and send back a conformation
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    jsonReq = flask_post_json()
-    myWorld.set(entity, jsonReq)
-    return jsonify(myWorld.get(entity))
+    jsonReq = flask_post_json()             # get the body of the request as json
+    myWorld.set(entity, jsonReq)            # update the entity with its new values (or new entity)
+    return jsonify(myWorld.get(entity))     # send back the entity as json to confirm
 
+# get the world from the server
 @app.route("/world", methods=['POST','GET'])
 def world():
     '''you should probably return the world here'''
-    return jsonify(myWorld.world())
+    return jsonify(myWorld.world())         # send the current world as json
 
+# get an individual entity from the server's world
 @app.route("/entity/<entity>")
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return jsonify(myWorld.get(entity))
+    return jsonify(myWorld.get(entity))     # send the entity enquired
 
+# clear the server's world (not used in app. mostly for testing)
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
-    return "{}"
+    return "{}"                             # return "{}" since the world is empty to save computation
 
 if __name__ == "__main__":
     app.run()

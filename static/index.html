@@ -22,7 +22,7 @@
     "/>
     <script src="json2.js"></script>
   </head>
-  <body bgcolor="black" height="100%" width="100%">
+  <body bgcolor="#222222" height="100%" width="100%">
     <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas>
     <script>
 var canvas = document.getElementById('c');
@@ -35,6 +35,7 @@ var H = canvas.height = window.innerHeight-50;
 function sendJSONXMLHTTPRequest(url, objects, callback) {
     var xhr = new XMLHttpRequest();
 
+    // check presence of body to GEt or POST
     if(!objects){
       xhr.open('GET', url);
     }else{
@@ -45,8 +46,8 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
         if (xhr.readyState==4) {
             try {
                 if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
+                    // parse some JSON from the request!
+                    // Pass the data to the callback!
                     callback(JSON.parse(xhr.responseText));
                 }
             }
@@ -56,33 +57,51 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
         }
     };
 
-    //XXX: POST to a URL
+    // set universal header
     xhr.setRequestHeader("Accept", "application/json");
 
+    // Set headers and include body if necessary in POST, else GET
     if(!objects){
       xhr.send(null);
     }else{
       xhr.setRequestHeader("Content-type", "application/json");
       xhr.send(objects);
     }
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
 }
 
 
+// function to generate random id for each client so they can each have 100 strokes and not delete each other.
+// Also each Client can have a different colored stroke because ID is a 3 digit hex
+// written by csharptest.net (http://stackoverflow.com/users/164392/csharptest-net)
+// on StackOverflow (http://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript)
+function makeid()
+{
+    var text = "";
+    var possible = "ABCDEF0123456789";
+
+    for( var i=0; i < 3; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
+
+// Client-side version of the world
 world = {};
 
-//XXX: TODO Make this prettier!
+clientId = makeid();
+
+// its pretty!!
 function drawCircle(context,entity) {
     with(context) {
         beginPath();
-        lineWidth = 3;
+        lineWidth = 2;
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);
+        arc(x, y, (entity["radius"])?entity["radius"]:30, 0, 2.0 * Math.PI, false);
         stroke();
     }
 }
@@ -92,15 +111,16 @@ function prepEntity(entity) {
         entity["colour"] = "#FF0000";
     }
     if (!entity["radius"]) {
-        entity["radius"] = 50;
+        entity["radius"] = 30;
     }
     return entity;
 }
 
+// Prettier background
 function clearFrame() {
     with(context) {
 	moveTo(0,0);
-	fillStyle = "#000";
+	fillStyle = "#222222";
 	fillRect(0,0,W,H);
     }
 
@@ -153,21 +173,19 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    //drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
+    //drawNextFrame(); (but should we?) (no, drawing every frame without checking... sorry)
+    // Send a XHTML Request with a json body that updates the entity you just  modified!
     var entityUrl = '/entity/' + entity;
     var jsonEntity = JSON.stringify(data);
     sendJSONXMLHTTPRequest(entityUrl, jsonEntity, function(notUsed){
-      return null
+      return null;                 //need to give a function, don't need the data
     });
-    drawNextFrame();
-
 }
 
 var counter = 0;
 function addEntityWithoutName(data) {
     //var name = "X"+Math.floor((Math.random()*100)+1);
-    var name = "X"+(counter++)%100;
+    var name = clientId+(counter++)%100;
     addEntity(name,data);
 }
 
@@ -268,7 +286,7 @@ mouse = (function() {
 })();
 
 // Add the application specific mouse listeners!
-//XXX: TODO Make these prettier!
+// Prettier by each client having different colors (randomly)
 mouse.mousedowners.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
 });
@@ -278,18 +296,19 @@ mouse.mouseuppers.push(function(x,y,clicked,e) {
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    var color = "#" + clientId;
+    addEntityWithoutName({'x':x,'y':y,'colour':color,
                           'radius':10});
 });
 
 
 function update() {
-    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
+    //Get the world from the webservice using a XMLHTTPRequest
     sendJSONXMLHTTPRequest('/world', null, function(newWorld){
-      world = newWorld;
+      world = newWorld;       // Update the world!
     });
-    
-    renderFrame();
+
+    renderFrame();            // Draw it out
 }
 
 // 30 frames per second
