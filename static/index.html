@@ -160,6 +160,7 @@ function addEntity(entity, data) {
     sendJSONXMLHTTPRequest(entityUrl, jsonEntity, function(notUsed){
       return null
     });
+    drawNextFrame();
 
 }
 
@@ -287,11 +288,12 @@ function update() {
     sendJSONXMLHTTPRequest('/world', null, function(newWorld){
       world = newWorld;
     });
-    drawFrame();
+    
+    renderFrame();
 }
 
 // 30 frames per second
-setInterval( update, 1000/30.0);
+setInterval( function(){update()}, 1000/30.0);
 
 
 

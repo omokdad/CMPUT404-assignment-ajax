@@ -80,8 +80,8 @@ def hello():
 def update(entity):
     '''update the entities via this interface'''
     jsonReq = flask_post_json()
-    myworld.set(entity, jsonReq)
-    return None
+    myWorld.set(entity, jsonReq)
+    return "{}"
 
 @app.route("/world", methods=['POST','GET'])
 def world():
@@ -97,7 +97,7 @@ def get_entity(entity):
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
-    return None
+    return "{}"
 
 if __name__ == "__main__":
     app.run()
